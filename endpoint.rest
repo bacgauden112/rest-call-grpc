@@ -1,0 +1,10 @@
+GET http://localhost:3001/messages
+
+###
+
+POST http://localhost:3001/messages
+
+content-type: application/json
+{
+    "message": "sample",
+}
