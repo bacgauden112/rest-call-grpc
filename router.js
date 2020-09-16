@@ -5,14 +5,23 @@ const http = require("http");
 var microtime = require('microtime')
 const request = require('request');
 
+const makeString =  function (length) {
+  var result           = '';
+  var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  var charactersLength = characters.length;
+  for ( var i = 0; i < length; i++ ) {
+     result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+}
 
 // Getting all
 router.get('/', async (req, res) => {
   try {
+    let n = parseInt(req.query.num);
     let retObj = {
       "data": [
-        { id: '1', title: 'Note 1', content: 'Content 1'},
-        { id: '2', title: 'Note 2', content: 'Content 2'}
+        { id: '1', title: 'Note 1', content: `${makeString(n)}`}
       ]
     }
     res.json(retObj)
@@ -24,24 +33,25 @@ router.get('/', async (req, res) => {
 
 
 router.get('/call-rest', async (req, response) => {
+  let n = req.query.num
   const s1_start = microtime.now()
-  request('http://localhost:3002/messages', { json: true }, (err, res, body) => {
+  request(`${process.env.REST_API}/messages?num=${n}`, { json: true }, (err, res, body) => {
     if (err) { return console.log(err); }
-     
     const s1_end = microtime.now()
-      const ret = {
-        "startS1" : s1_start,
-        "endS1": s1_end,
-        "durationS1": s1_end - s1_start,
-        "data": body
-      }
-    response.send(ret);
+    let retObj = {
+      "start" : s1_start,
+      "end": s1_end,
+      "duration": s1_end - s1_start,
+      "data": body
+    }
+    response.send(retObj);
   });
    
 })
 
 
 router.get('/call-grpc', async (req, res) => {
+  let n = req.query.num
   const s1_start = microtime.now()
   try {
     const client = require('./client')
@@ -49,12 +59,7 @@ router.get('/call-grpc', async (req, res) => {
       const s1_end = microtime.now()
       const duration = s1_end - s1_start
       if (!error) {
-        // let retObj = {
-        //   "data": [
-        //     { id: '1', title: 'Note 1', content: 'Content 1'},
-        //     { id: '2', title: 'Note 2', content: 'Content 2'}
-        //   ]
-        // }
+        
         let retObj = {
           "start" : s1_start,
           "end": s1_end,
